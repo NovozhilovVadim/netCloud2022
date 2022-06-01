@@ -7,6 +7,7 @@ public class FileProcessorHandler implements Runnable {
     private DataInputStream is;
     private DataOutputStream os;
     private BufferedOutputStream bos;
+
     private byte[] buf;
     private static final int SIZE = 256;
 
