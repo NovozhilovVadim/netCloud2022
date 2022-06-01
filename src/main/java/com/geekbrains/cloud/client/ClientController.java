@@ -43,8 +43,8 @@ public class ClientController implements Initializable {
 //    private ListView<String> list;
 
 //    private ExecutorService executorService;
-//    private static String command;
-//    private String fileName;
+    private static String command;
+    private String fileName;
 
     //Инициализируем подключение, переменные и т.п
     public void connect(){
@@ -109,6 +109,47 @@ public class ClientController implements Initializable {
         });
     }
 
+    public void read(){//Слушатель потока
+        try {
+            System.out.println("Thread read - accept");
+            while (true){//цикл
+                System.out.println("restart cicle");
+                command = is.readUTF();//Слушаем команду из входящего потока
+                System.out.println(command);
+                if (command.equals("#LIST#")) {//сверяем команду, если список
+                    Platform.runLater(() -> serverView.getItems().clear());//очищаем поле списка
+                    int count = is.readInt();//читаем размер архива(Количество строчек)
+                    for (int i = 0; i < count; i++) {//количество циклов чтения равно количеству строк
+                        String fileName = is.readUTF();//читаем имя файла
+                        Platform.runLater(() -> serverView.getItems().add(fileName));//пишем имя файла в листвью
+                    }
+                }
+                if (command.equals("#SEND#FILE#")) {//команда на получение файла
+                    fileName = is.readUTF();//получаем имя файла
+                    buf = new byte[SIZE];//создаём буфер размера SIZE
+                    long size = is.readLong();// получаем размер файла от сервера
+                    System.out.println("Created file: " + fileName);
+                    System.out.println("File size: " + size);
+                    Path currentPath = currentDir.toPath().resolve(fileName);//Создаём целевой файл в текущей дирректории
+                    try (FileOutputStream fos = new FileOutputStream(currentPath.toFile())) {//создаём поток записи в файл
+                        for (int i = 0; i < (size + SIZE - 1) / SIZE; i++) {//запускаем цикл от 0 до размер файла + размер буфера - 1 ии разделить на размер буфера
+                            int read = is.read(buf);//читаем поток блоками равными буферу
+                            fos.write(buf, 0, read);//пишем в файл
+                        }
+                    }
+                    // client state updated
+                    Platform.runLater(this::fillCurrentDirFiles);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            //reconnect to server
+            connect();//в случае вылета делаем реконект
+        }
+    }
+
+
+
     //Скачиваем файл
     public void download(ActionEvent actionEvent) {
     }
@@ -122,8 +163,16 @@ public class ClientController implements Initializable {
     public void initialize(URL location, ResourceBundle resources){//Получаем урл и папку с ресурсом
         try {
             connect();
+            System.out.println("connect passed...");
             fillCurrentDirFiles();
+            System.out.println("fillCurrentDirFiles passed...");
             initClickListener();
+            System.out.println("initClickListener passed...");
+
+            //запускаем слушателя в демоне, чтобы он убивался после остановки приложения
+            Thread readThread = new Thread(this::read);
+            readThread.setDaemon(true);
+            readThread.start();
 
         }catch (Exception e){
             e.printStackTrace();
