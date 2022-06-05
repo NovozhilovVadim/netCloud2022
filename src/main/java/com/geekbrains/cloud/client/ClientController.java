@@ -151,11 +151,36 @@ public class ClientController implements Initializable {
 
 
     //Скачиваем файл
-    public void download(ActionEvent actionEvent) {
+    public void download(ActionEvent actionEvent) throws IOException {
+        fileName = serverLabel.getText();//получаем имя файла из textFieldServer
+        os.writeUTF("#LOAD#FILE#");//отправляем команду серверу отправить файл
+        System.out.println("#LOAD#FILE#");
+        os.writeUTF(fileName);//отправляем серверу имя выбранного файла
+        os.flush();//очищаем поток
+        serverLabel.setText("");//очищаем поле выбора
     }
 
     //отправляем файл
-    public void upload(ActionEvent actionEvent) {
+    public void upload(ActionEvent actionEvent) throws IOException {
+        fileName = clientLabel.getText();//получаем имя файла из textField
+        System.out.println(fileName);
+        File currentFile = currentDir.toPath().resolve(fileName).toFile();// создаем объект
+        System.out.println(currentFile);
+        os.writeUTF("#SEND#FILE#");//отправляем команду серверу на прием файла
+        os.writeUTF(fileName);//передаём имя файла
+        os.writeLong(currentFile.length());//предаем размер файла
+        try (FileInputStream is = new FileInputStream(currentFile)){//создаём поток чтения файла
+            while (true){//создаем бесконечный цикл
+                int read = is.read(buf); // создаём числовую переменную из потока чтения файла
+                if (read == -1) { //если прочитали всё - прерываем цикл
+                    break;
+                }
+                os.write(buf, 0, read);// пишем в исходящий поток
+            }
+        }
+        os.flush();//очищаем исходящий поток
+        System.out.println("Файл отправлен");
+        clientLabel.setText("");//очищаем поле выбора
     }
 
     //Переопределяем инишалаёзбл
