@@ -8,7 +8,7 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.geekbrains.cloud.client.ClientController"
+            fx:controller="com.geekbrains.cloud.ClientController"
             prefHeight="400.0" prefWidth="600.0">
     <ListView fx:id="clientView" layoutX="14.0" layoutY="80.0" prefHeight="473.0" prefWidth="281.0"/>
     <ListView fx:id="serverView" layoutX="295.0" layoutY="80.0" prefHeight="473.0" prefWidth="281.0"/>

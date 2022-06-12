@@ -1,4 +1,4 @@
-package com.geekbrains.cloud.server;
+package com.geekbrains.cloud;
 
 import java.io.IOException;
 import java.net.ServerSocket;

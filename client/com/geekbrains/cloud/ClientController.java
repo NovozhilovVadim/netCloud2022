@@ -1,4 +1,4 @@
-package com.geekbrains.cloud.client;
+package com.geekbrains.cloud;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -67,8 +67,28 @@ public class ClientController implements Initializable {
     //Заполняем панель домашней дирректории
     private void fillCurrentDirFiles(){
         clientView.getItems().clear();//чистим поле
-        clientView.getItems().add("..");//безусловныый переход на дирректорию вверх
+        clientView.getItems().add("src");//безусловныый переход на дирректорию вверх
         clientView.getItems().addAll(currentDir.list());//Читаем и передаем в панель список файлов и дирректорий
+    }
+
+    private void fillServerDirFile() throws IOException {//получаем список файлов сервера
+        serverView.getItems().clear();
+        serverView.getItems().add("src");
+        os.writeUTF("#LIST#");//запрос списка
+        System.out.println("send command #LIST#");
+
+        command = is.readUTF();//ловим ответ
+        System.out.println(" Get command: " + command );
+        if (command.equals("#LIST#")){//убеждаемся, что сервер нас понял
+            int count = is.readInt();// размер списка
+            System.out.println(" Count is: " + count);
+            for (int i = 0; i < count; i++) {
+                fileName = is.readUTF();
+                System.out.println(fileName);
+                serverView.getItems().add(fileName);
+            }
+        }
+        os.flush();
     }
 
     //Контролим действия мыши
@@ -91,7 +111,7 @@ public class ClientController implements Initializable {
         serverView.setOnMouseClicked(e -> {//создаем обработчик для домашнего фрейма
             if (e.getClickCount() == 2) {//если двойной клик
                 String fileNameServer = serverView.getSelectionModel().getSelectedItem();//вытаскиваем имя файла
-                if (fileNameServer.equals("..")){//если выбрана директория
+                if (fileNameServer.equals("src")){//если выбрана директория
                     try {
                         os.writeUTF("#DIR#UP#");//отправляем команду на шаг выше
                         System.out.println("#DIR#UP#");
@@ -158,6 +178,7 @@ public class ClientController implements Initializable {
         os.writeUTF(fileName);//отправляем серверу имя выбранного файла
         os.flush();//очищаем поток
         serverLabel.setText("");//очищаем поле выбора
+
     }
 
     //отправляем файл
@@ -181,6 +202,7 @@ public class ClientController implements Initializable {
         os.flush();//очищаем исходящий поток
         System.out.println("Файл отправлен");
         clientLabel.setText("");//очищаем поле выбора
+
     }
 
     //Переопределяем инишалаёзбл
@@ -191,6 +213,8 @@ public class ClientController implements Initializable {
             System.out.println("connect passed...");
             fillCurrentDirFiles();
             System.out.println("fillCurrentDirFiles passed...");
+            fillServerDirFile();
+            System.out.println("fillServerDirFile passed...");
             initClickListener();
             System.out.println("initClickListener passed...");
 

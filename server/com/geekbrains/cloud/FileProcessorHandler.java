@@ -1,4 +1,4 @@
-package com.geekbrains.cloud.server;
+package com.geekbrains.cloud;
 
 import javax.sound.midi.Patch;
 import java.io.*;
@@ -43,7 +43,7 @@ public class FileProcessorHandler implements Runnable {//наследуемся 
                             fos.write(buf, 0, read);//пишем в файл
                         }
                     }
-                    os.writeUTF("File successfully uploaded");
+//                    os.writeUTF("File successfully uploaded");
                     os.flush();
                 }
                 if (command.equals("#LIST#")){//запрос списмка файлов
@@ -86,6 +86,7 @@ public class FileProcessorHandler implements Runnable {//наследуемся 
                     }
                     System.out.println("File Send");
                     os.flush();
+
                 }
             }
         }catch (Exception e){
